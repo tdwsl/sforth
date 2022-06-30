@@ -22,10 +22,12 @@ typedef struct forth {
 	void *stack[FTH_STACKSZ];
 	size_t sp;
 
-	size_t rstack[FTH_RSTACKSZ];
+	void *rstack[FTH_RSTACKSZ];
 	size_t rsp;
 
+	void *base;
 	char mode;
+	char quit;
 } Forth;
 
 Forth *newForth();
