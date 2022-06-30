@@ -9,6 +9,7 @@ enum {
 	FTH_PUSHB,
 	FTH_PUSHSTR,
 	FTH_PUSHPTR,
+	FTH_CALL,
 	FTH_HERE,
 	FTH_RPUSH,
 	FTH_RPOP,
@@ -19,6 +20,7 @@ enum {
 	FTH_JZ,
 	FTH_ADDINS,
 	FTH_ADDVAL,
+	FTH_ADDRETVAL,
 	FTH_DROP,
 	FTH_DUP,
 	FTH_SWAP,
@@ -55,7 +57,8 @@ enum {
 
 enum {
 	FTHMODE_RUN,
-	FTHMODE_COMPILE,
+	FTHMODE_WORD,
+	FTHMODE_WORDNAME,
 	FTHMODE_QUOTE,
 	FTHMODE_SQUOTE,
 };
@@ -81,7 +84,7 @@ void fth_addIns(Forth *fth, char ins) {
 	fth->dict[fth->size-1] = ins;
 }
 
-void fth_addValue(Forth *fth, void *val) {
+void fth_addVal(Forth *fth, void *val) {
 	fth->dictSize(fth, fth->size+sizeof(void*));
 	memcpy(fth->dict+fth->size-sizeof(void*), &val);
 }
@@ -142,6 +145,20 @@ Forth *newForth() {
 	fth_addIns(fth, FTH_OVER);
 	fth_addIns(fth, FTH_OVER);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "2SWAP", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_ROT);
+	fth_addIns(fth, FTH_RPUSH);
+	fth_addIns(fth, FTH_ROT);
+	fth_addIns(fth, FTH_RPOP);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "2OVER", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 3);
+	fth_addIns(fth, FTH_PICK);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 3);
+	fth_addIns(fth, FTH_PICK);
+	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "DEPTH", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_DEPTH);
 	fth_addIns(fth, FTH_RET);
@@ -154,17 +171,8 @@ Forth *newForth() {
 	fth_addWord(fth, "R>", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_RPOP);
 	fth_addIns(fth, FTH_RET);
-	fth_addWord(fth, "=", FTHWORD_INSERT);
-	fth_addIns(fth, FTH_EQUAL);
-	fth_addIns(fth, FTH_RET);
-	fth_addWord(fth, "<>", FTHWORD_INSERT);
-	fth_addIns(fth, FTH_NEQUAL);
-	fth_addIns(fth, FTH_RET);
-	fth_addWord(fth, ">", FTHWORD_INSERT);
-	fth_addIns(fth, FTH_GREATER);
-	fth_addIns(fth, FTH_RET);
-	fth_addWord(fth, "<", FTHWORD_INSERT);
-	fth_addIns(fth, FTH_LESS);
+	fth_addWord(fth, "HERE", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_HERE);
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "AND", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_AND);
@@ -178,8 +186,206 @@ Forth *newForth() {
 	fth_addWord(fth, "INV", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_INV);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "=", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_EQUAL);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "<>", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_NEQUAL);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, ">", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_GREATER);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "<", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_LESS);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, ">=", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_DEC);
+	fth_addIns(fth, FTH_GREATER);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "<=", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_INC);
+	fth_addIns(fth, FTH_LESS);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "0=", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 0);
+	fth_addIns(fth, FTH_EQUAL);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "0<>", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 0);
+	fth_addIns(fth, FTH_EQUAL);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "0<", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 0);
+	fth_addIns(fth, FTH_LESS);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "0>", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 0);
+	fth_addIns(fth, FTH_GREATER);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "0<=", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, 1);
+	fth_addIns(fth, FTH_LESS);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "0>=", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_PUSHB);
+	fth_addIns(fth, -1);
+	fth_addIns(fth, FTH_GREATER);
+	fth_addIns(fth, FTH_RET);
+
+	fth_addWord(fth, "IF", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_JZ);
+	fth_addIns(fth, FTH_ADDVAL);
+		fth_addVal(fth, 0);
+	fth_addIns(fth, FTH_HERE);
+	fth_addIns(fth, FTH_RPUSH);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "THEN", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_RSET);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "ELSE", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_RSET);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_JMP);
+	fth_addIns(fth, FTH_ADDVAL);
+		fth_addVal(fth, 0);
+	fth_addIns(fth, FTH_HERE);
+	fth_addIns(fth, FTH_RPUSH);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "DO", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RPUSH);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_DEC);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RPUSH);
+	fth_addIns(fth, FTH_HERE);
+	fth_addIns(fth, FTH_RPUSH);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "LOOP", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RPOP);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RPOP);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_INC);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_OVER);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_OVER);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_LESS);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_JZ);
+	fth_addIns(fth, FTH_ADDRETVAL);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "+LOOP", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RPOP);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RPOP);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_ROT);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_PLUS);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_OVER);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_OVER);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_LESS);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_JZ);
+	fth_addIns(fth, FTH_ADDRETVAL);
+	fth_addIns(fth, FTH_RET);
 
 	fth->old_size = fth->size;
 
 	return fth;
+}
+
+void freeForth(Forth *fth) {
+	for(int i = 0; i < fth->num_words; i++)
+		free(fth->words[i].name);
+	if(fth->words)
+		free(fth->words);
+
+	if(fth->dict)
+		free(fth->dict);
+
+	free(fth);
+}
+
+void fth_nextInstruction(Forth *fth, size_t *pc) {
+	switch(fth->dict[*pc]) {
+	default:
+		(*pc)++;
+		break;
+	case FTH_PUSHB:
+		(*pc) += 2;
+		break;
+	case FTH_JUMP:
+	case FTH_JZ:
+	case FTH_CALL:
+	case FTH_PUSH:
+	case FTH_PUSHPTR:
+	case FTH_ADDVAL:
+		(*pc) += sizeof(void*) + 1;
+		break;
+	case FTH_PUSHSTR:
+		(*pc) += fth->dict[(*pc)+1] + 1;
+		break;
+	}
+}
+
+void fth_capitalize(char *s) {
+	for(char *c = s; *c; c++)
+		if(*c >= 'a' && *c <= 'z')
+			*c += 'A' - 'a';
+}
+
+struct forthWord *fth_findWord(Forth *fth, const char *name) {
+	for(size_t i = fth->num_words; i > 0; i--)
+		if(strcmp(fth->words[i-1].name, name) == 0)
+			return &fth->words[i-1];
+	return 0;
+}
+
+void fth_printNum(Forth *fth, intptr_t n) {
+	if(!n) {
+		fth->emit('0');
+		return;
+	}
+
+	if(n < 0) {
+		fth->emit('-');
+		n *= -1;
+	}
+
+	intptr_t x = 1;
+	while(x < n)
+		x *= (intptr_t)(fth->base);
+
+	int ng = 0;
+	while(x) {
+		int d = 0;
+		while(n-x >= 0) {
+			n -= x;
+			d++;
+		}
+		if(ng || d) {
+			if(d < 10)
+				fth->emit(d+'0');
+			else
+				fth->emit(d-10+'A');
+			ng = 1;
+		}
+
+		x /= (intptr_t)(fth->base);
+	}
 }
