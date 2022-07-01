@@ -1,10 +1,10 @@
 #include "io.h"
 #include <stdio.h>
 
-void chput(char c) {
+void fth_chput(char c) {
 	fputc(c, stdout);
 }
 
-char chget() {
+char fth_chget() {
 	return fgetc(stdin);
 }

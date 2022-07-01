@@ -1,4 +1,5 @@
 #include "sforth.h"
+#include "machine.h"
 
 int main() {
 	Forth *fth = newForth();
