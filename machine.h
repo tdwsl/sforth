@@ -69,6 +69,8 @@ enum {
 	FTH_INCLUDE,
 	FTH_ADDWORD,
 	FTH_ALLOT,
+	FTH_RESIZE,
+	FTH_OLDSIZE,
 };
 
 void fth_addWord(Forth *fth, const char *name, char type);

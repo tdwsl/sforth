@@ -6,3 +6,5 @@
 test
 \ traceon
 s" Works?" type cr
+
+create line 80 allot
