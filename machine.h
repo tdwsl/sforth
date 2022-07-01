@@ -9,6 +9,7 @@ enum {
 	FTH_PUSHB,
 	FTH_PUSHSTR,
 	FTH_PUSHPTR,
+	FTH_PUSHPTR2,
 	FTH_CALL,
 	FTH_RET,
 	FTH_EXIT,
@@ -59,13 +60,20 @@ enum {
 	FTH_SETC,
 	FTH_GETC,
 	FTH_GETNEXT,
+	FTH_CAPITALIZE,
 	FTH_FREEBUF,
 	FTH_PRINTBUF,
 	FTH_ADDSTR,
 	FTH_ADDCH,
+	FTH_SEE,
+	FTH_INCLUDE,
+	FTH_ADDWORD,
+	FTH_ALLOT,
 };
 
 void fth_addWord(Forth *fth, const char *name, char type);
+struct forthWord *fth_findWord(Forth *fth, const char *name);
+void fth_capitalize(char *s);
 void fth_addIns(Forth *fth, char ins);
 void fth_addVal(Forth *fth, void *val);
 void fth_nextInstruction(Forth *fth, size_t *pc);
