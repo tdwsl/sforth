@@ -25,9 +25,15 @@ typedef struct forth {
 	void *rstack[FTH_RSTACKSZ];
 	size_t rsp;
 
+	size_t pc;
+	size_t immediate;
+
+	char *buf;
+
 	void *base;
-	char mode;
+	char mode, old_mode;
 	char quit;
+	char trace;
 } Forth;
 
 Forth *newForth();
