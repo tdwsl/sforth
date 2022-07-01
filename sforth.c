@@ -37,19 +37,6 @@ void freeForth(Forth *fth) {
 	free(fth);
 }
 
-void fth_capitalize(char *s) {
-	for(char *c = s; *c; c++)
-		if(*c >= 'a' && *c <= 'z')
-			*c += 'A' - 'a';
-}
-
-struct forthWord *fth_findWord(Forth *fth, const char *name) {
-	for(size_t i = fth->num_words; i > 0; i--)
-		if(strcmp(fth->words[i-1].name, name) == 0)
-			return &fth->words[i-1];
-	return 0;
-}
-
 char fth_isInteger(Forth *fth, char *s, intptr_t *n) {
 	*n = 0;
 	char neg = 0;
@@ -91,8 +78,6 @@ void fth_runToken(Forth *fth, char *s) {
 		strcpy(fth->buf, s);
 		fth->mode = fth->old_mode;
 		fth_run(fth);
-		/*if(fth->mode == FTHMODE_RUN && !fth->immediate)
-			fth->size = fth->old_size;*/
 		break;
 	case FTHMODE_WORDNAME:
 		fth_capitalize(s);
