@@ -52,6 +52,8 @@ typedef struct forth {
 
 Forth *newForth();
 void freeForth(Forth *fth);
+void fth_addFunction(Forth *fth, void (*fun)(Forth*), const char *name);
+void fth_addConstant(Forth *fth, void *val, const char *name);
 void fth_runString(Forth *fth, const char *text);
 void fth_runFile(Forth *fth, const char *filename);
 

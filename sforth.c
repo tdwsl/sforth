@@ -37,6 +37,20 @@ void freeForth(Forth *fth) {
 	free(fth);
 }
 
+void fth_addFunction(Forth *fth, void (*fun)(Forth*), const char *name) {
+	fth_addWord(fth, name, FTHWORD_NORMAL);
+	fth_addIns(fth, FTH_FUNCTION);
+	fth_addVal(fth, fun);
+	fth_addIns(fth, FTH_RET);
+}
+
+void fth_addConstant(Forth *fth, void *val, const char *name) {
+	fth_addWord(fth, name, FTHWORD_NORMAL);
+	fth_addIns(fth, FTH_PUSH);
+	fth_addVal(fth, val);
+	fth_addIns(fth, FTH_RET);
+}
+
 char fth_isInteger(Forth *fth, char *s, intptr_t *n) {
 	*n = 0;
 	char neg = 0;

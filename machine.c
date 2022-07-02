@@ -259,6 +259,9 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, sizeof(void*));
 	fth_addIns(fth, FTH_PLUS);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "EXIT", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_EXIT);
+	fth_addIns(fth, FTH_RET);
 
 	fth_addWord(fth, "IMMEDIATE", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_IMMEDIATE);
@@ -340,6 +343,14 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_JZ);
 	fth_addIns(fth, FTH_ADDRETVAL);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "BEGIN", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_DSIZE);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "UNTIL", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_JZ);
+	fth_addIns(fth, FTH_ADDVAL);
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "S\"", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_GETNEXT);
@@ -479,6 +490,7 @@ void fth_nextInstruction(Forth *fth, size_t *pc) {
 	case FTH_CALL:
 	case FTH_PUSH:
 	case FTH_PUSHPTR:
+	case FTH_FUNCTION:
 		(*pc) += sizeof(void*) + 1;
 		break;
 	case FTH_PUSHSTR:
@@ -613,7 +625,8 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 	case FTH_ALLOT: printf("allot"); break;
 	case FTH_RESIZE: printf("resize"); break;
 	case FTH_OLDSIZE: printf("oldsize"); break;
-	case FTH_TO: printf("TO"); break;
+	case FTH_TO: printf("to"); break;
+	case FTH_FUNCTION: printf("function");
 	}
 
 	if(!detail)
@@ -635,6 +648,7 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 		printf(" %lu", *(void**)(fth->dict+pc+1));
 		break;
 	case FTH_PUSH:
+	case FTH_FUNCTION:
 		printf(" %ld", *(void**)(fth->dict+pc+1));
 		break;
 	case FTH_PUSHB:
@@ -933,6 +947,9 @@ void fth_run(Forth *fth) {
 				fth_addVal(fth, (void*)(fth->dict+wd->addr+1));
 				fth_addIns(fth, FTH_SET);
 			}
+			break;
+		case FTH_FUNCTION:
+			((void(*)(Forth*))(fth->dict+fth->pc+1))(fth);
 			break;
 		}
 
