@@ -388,6 +388,8 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_PUSH);
 	fth_addIns(fth, FTH_ADDVAL);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RET);
 	fth_addIns(fth, FTH_RESIZE);
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "CREATE", FTHWORD_IMMEDIATE);
@@ -416,6 +418,28 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, sizeof(void*));
 	fth_addIns(fth, FTH_ALLOT);
 	fth_addIns(fth, FTH_RESIZE);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "VALUE", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_OLDSIZE);
+	fth_addIns(fth, FTH_GETNEXT);
+	fth_addIns(fth, FTH_CAPITALIZE);
+	fth_addIns(fth, FTH_ADDWORD);
+	fth_addIns(fth, FTH_FREEBUF);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_PUSHPTR);
+	fth_addIns(fth, FTH_ADDVAL);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_GET);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RET);
+	fth_addIns(fth, FTH_RESIZE);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "TO", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_OLDSIZE);
+	fth_addIns(fth, FTH_GETNEXT);
+	fth_addIns(fth, FTH_CAPITALIZE);
+	fth_addIns(fth, FTH_TO);
+	fth_addIns(fth, FTH_FREEBUF);
 	fth_addIns(fth, FTH_RET);
 
 	fth_addWord(fth, "TRACEON", FTHWORD_INSERT);
@@ -589,6 +613,7 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 	case FTH_ALLOT: printf("allot"); break;
 	case FTH_RESIZE: printf("resize"); break;
 	case FTH_OLDSIZE: printf("oldsize"); break;
+	case FTH_TO: printf("TO"); break;
 	}
 
 	if(!detail)
@@ -898,6 +923,16 @@ void fth_run(Forth *fth) {
 			break;
 		case FTH_RESIZE:
 			fth->old_size = fth->size;
+			break;
+		case FTH_TO:
+			wd = fth_findWord(fth, fth->buf);
+			if(!wd)
+				printf("%s ?\n", fth->buf);
+			else {
+				fth_addIns(fth, FTH_PUSH);
+				fth_addVal(fth, (void*)(fth->dict+wd->addr+1));
+				fth_addIns(fth, FTH_SET);
+			}
 			break;
 		}
 
