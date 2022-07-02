@@ -34,10 +34,10 @@ typedef struct forth {
 	size_t size, old_size, max_size;
 
 	void *stack[FTH_STACKSZ];
-	size_t sp;
+	int sp;
 
 	void *rstack[FTH_RSTACKSZ];
-	size_t rsp;
+	int rsp;
 
 	size_t pc;
 	size_t immediate;

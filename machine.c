@@ -770,7 +770,7 @@ void fth_run(Forth *fth) {
 			fth->sp++;
 			break;
 		case FTH_DEPTH:
-			fth->stack[fth->sp] = (void*)(fth->sp++);
+			fth->stack[fth->sp] = (void*)(intptr_t)(fth->sp++);
 			break;
 		case FTH_PICK:
 			fth->stack[fth->sp-1] = fth->stack[fth->sp-(size_t)fth->stack[fth->sp-1]-1];
@@ -934,6 +934,15 @@ void fth_run(Forth *fth) {
 				fth_addIns(fth, FTH_SET);
 			}
 			break;
+		}
+
+		if(fth->sp < 0) {
+			fth->sp = 0;
+			printf("stack underflow !\n");
+		}
+		if(fth->rsp < 0) {
+			fth->rsp = 0;
+			printf("return stack underflow !\n");
 		}
 
 		fth_nextInstruction(fth, &fth->pc);
