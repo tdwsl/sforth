@@ -1,6 +1,4 @@
 #include "sforth.h"
-#include "machine.h"
-#include "io.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -269,7 +267,7 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addWord(fth, "IF", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_JZ);
-	fth_addIns(fth, FTH_HERE);
+	fth_addIns(fth, FTH_DSIZE);
 	fth_addIns(fth, FTH_RPUSH);
 	fth_addIns(fth, FTH_PUSHB);
 	fth_addIns(fth, 0);
@@ -282,7 +280,7 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addWord(fth, "ELSE", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_JUMP);
-	fth_addIns(fth, FTH_HERE);
+	fth_addIns(fth, FTH_DSIZE);
 	fth_addIns(fth, FTH_PUSHB);
 	fth_addIns(fth, 0);
 	fth_addIns(fth, FTH_ADDVAL);
@@ -346,10 +344,12 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "BEGIN", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_DSIZE);
+	fth_addIns(fth, FTH_RPUSH);
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "UNTIL", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_JZ);
+	fth_addIns(fth, FTH_RPOP);
 	fth_addIns(fth, FTH_ADDVAL);
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "S\"", FTHWORD_IMMEDIATE);
@@ -645,11 +645,11 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 	case FTH_JUMP:
 	case FTH_JZ:
 	case FTH_CALL:
-		printf(" %lu", *(void**)(fth->dict+pc+1));
+		printf(" %lu", (size_t)*(void**)(fth->dict+pc+1));
 		break;
 	case FTH_PUSH:
 	case FTH_FUNCTION:
-		printf(" %ld", *(void**)(fth->dict+pc+1));
+		printf(" %ld", (intptr_t)*(void**)(fth->dict+pc+1));
 		break;
 	case FTH_PUSHB:
 		printf(" %d", fth->dict[pc+1]);
@@ -675,9 +675,9 @@ void fth_printWord(Forth *fth, struct forthWord *wd) {
 void fth_run(Forth *fth) {
 	void *v1;
 	size_t i;
-	size_t prsp = fth->rsp;
 	char c;
 	struct forthWord *wd;
+	void (*fun)(Forth*);
 
 	while(fth->pc < fth->size && !fth->quit) {
 		if(fth->trace) {
@@ -706,19 +706,15 @@ void fth_run(Forth *fth) {
 			if(fth->immediate)
 				fth->immediate++;
 			fth->rstack[fth->rsp++] = (void*)fth->pc;
-			prsp = fth->rsp;
 			fth->pc = (size_t)(*(void**)(fth->dict+fth->pc+1));
 			continue;
 		case FTH_RET:
+		case FTH_EXIT:
 			if(fth->immediate)
 				if(--(fth->immediate) < 1)
 					return;
 			if(fth->rsp <= 0)
 				return;
-			fth->pc = (size_t)fth->rstack[--(fth->rsp)];
-			break;
-		case FTH_EXIT:
-			fth->rsp = prsp;
 			fth->pc = (size_t)fth->rstack[--(fth->rsp)];
 			break;
 		case FTH_BYE:
@@ -728,7 +724,7 @@ void fth_run(Forth *fth) {
 			fth->stack[fth->sp++] = (void*)(fth->dict+fth->size);
 			break;
 		case FTH_DSIZE:
-			fth->stack[fth->sp++] = (void*)(fth->size-1);
+			fth->stack[fth->sp++] = (void*)(fth->size);
 			break;
 		case FTH_RPUSH:
 			fth->rstack[fth->rsp++] = fth->stack[--(fth->sp)];
@@ -743,14 +739,19 @@ void fth_run(Forth *fth) {
 			fth->rsp--;
 			break;
 		case FTH_RSET:
-			*(void**)(fth->rstack[--(fth->rsp)]) = fth->stack[--(fth->sp)];
+			i = fth->size;
+			fth->size = (size_t)fth->rstack[--(fth->rsp)];
+			fth_addVal(fth, fth->stack[--(fth->sp)]);
+			fth->size = i;
 			break;
 		case FTH_JUMP:
 			fth->pc = (size_t)*(void**)(fth->dict+fth->pc+1);
-			break;
+			continue;
 		case FTH_JZ:
-			if(!fth->stack[--(fth->sp)])
+			if(!fth->stack[--(fth->sp)]) {
 				fth->pc = (size_t)(*(void**)(fth->dict+fth->pc+1));
+				continue;
+			}
 			break;
 		case FTH_ADDINS:
 			fth_addIns(fth, fth->dict[fth->pc+1]);
@@ -784,7 +785,8 @@ void fth_run(Forth *fth) {
 			fth->sp++;
 			break;
 		case FTH_DEPTH:
-			fth->stack[fth->sp] = (void*)(intptr_t)(fth->sp++);
+			fth->stack[fth->sp] = (void*)(intptr_t)fth->sp;
+			fth->sp++;
 			break;
 		case FTH_PICK:
 			fth->stack[fth->sp-1] = fth->stack[fth->sp-(size_t)fth->stack[fth->sp-1]-1];
@@ -949,7 +951,8 @@ void fth_run(Forth *fth) {
 			}
 			break;
 		case FTH_FUNCTION:
-			((void(*)(Forth*))(fth->dict+fth->pc+1))(fth);
+			memcpy(&fun, fth->dict+fth->pc+1, sizeof(void*));
+			fun(fth);
 			break;
 		}
 

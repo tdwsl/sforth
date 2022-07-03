@@ -1,5 +1,4 @@
 #include "sforth.h"
-#include "machine.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,6 +41,7 @@ void fth_addFunction(Forth *fth, void (*fun)(Forth*), const char *name) {
 	fth_addIns(fth, FTH_FUNCTION);
 	fth_addVal(fth, fun);
 	fth_addIns(fth, FTH_RET);
+	fth->old_size = fth->size;
 }
 
 void fth_addConstant(Forth *fth, void *val, const char *name) {
@@ -49,6 +49,7 @@ void fth_addConstant(Forth *fth, void *val, const char *name) {
 	fth_addIns(fth, FTH_PUSH);
 	fth_addVal(fth, val);
 	fth_addIns(fth, FTH_RET);
+	fth->old_size = fth->size;
 }
 
 char fth_isInteger(Forth *fth, char *s, intptr_t *n) {

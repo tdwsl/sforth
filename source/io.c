@@ -1,4 +1,4 @@
-#include "io.h"
+#include "sforth.h"
 #include <stdio.h>
 
 void fth_chput(char c) {
@@ -6,5 +6,7 @@ void fth_chput(char c) {
 }
 
 char fth_chget() {
-	return fgetc(stdin);
+	char c = fgetc(stdin);
+	while(fgetc(stdin) != '\n');
+	return c;
 }

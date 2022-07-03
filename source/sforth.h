@@ -1,8 +1,24 @@
-#ifndef SFORTH_MACHINE_H
-#define SFORTH_MACHINE_H
+#ifndef SFORTH_H
+#define SFORTH_H
 
-#include "sforth.h"
 #include <stdlib.h>
+#include <stdint.h>
+
+#define FTH_STACKSZ 512
+#define FTH_RSTACKSZ 1024
+
+enum {
+	FTHWORD_NORMAL,
+	FTHWORD_IMMEDIATE,
+	FTHWORD_INSERT,
+};
+
+enum {
+	FTHMODE_RUN,
+	FTHMODE_WORD,
+	FTHMODE_WORDNAME,
+	FTHMODE_GETNEXT,
+};
 
 enum {
 	FTH_PUSH,
@@ -74,6 +90,46 @@ enum {
 	FTH_TO,
 	FTH_FUNCTION,
 };
+
+struct forthWord {
+	char *name;
+	char type;
+	size_t addr;
+};
+
+typedef struct forth {
+	struct forthWord *words;
+	int num_words;
+
+	char *dict;
+	size_t size, old_size, max_size;
+
+	void *stack[FTH_STACKSZ];
+	int sp;
+
+	void *rstack[FTH_RSTACKSZ];
+	int rsp;
+
+	size_t pc;
+	size_t immediate;
+
+	char *buf;
+
+	void *base;
+	char mode, old_mode;
+	char quit;
+	char trace;
+} Forth;
+
+Forth *newForth();
+void freeForth(Forth *fth);
+void fth_addFunction(Forth *fth, void (*fun)(Forth*), const char *name);
+void fth_addConstant(Forth *fth, void *val, const char *name);
+void fth_runString(Forth *fth, const char *text);
+void fth_runFile(Forth *fth, const char *filename);
+
+char fth_chget();
+void fth_chput(char c);
 
 void fth_addWord(Forth *fth, const char *name, char type);
 struct forthWord *fth_findWord(Forth *fth, const char *name);
