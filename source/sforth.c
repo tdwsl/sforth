@@ -6,8 +6,9 @@
 
 Forth *newForth() {
 	Forth *fth = (Forth*)malloc(sizeof(Forth));
-	fth->words = 0;
 	fth->num_words = 0;
+	fth->max_words = 20;
+	fth->words = (struct forthWord*)malloc(fth->max_words*sizeof(struct forthWord));
 	fth->size = 0;
 	fth->old_size = 0;
 	fth->max_size = 20;

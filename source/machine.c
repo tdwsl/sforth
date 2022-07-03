@@ -6,7 +6,10 @@
 
 void fth_addWord(Forth *fth, const char *name, char type) {
 	fth->num_words++;
-	fth->words = (struct forthWord*)realloc(fth->words, sizeof(struct forthWord)*fth->num_words);
+	if(fth->num_words < fth->max_words-10) {
+		fth->max_words += 10;
+		fth->words = (struct forthWord*)realloc(fth->words, sizeof(struct forthWord)*fth->max_words);
+	}
 	char *s = malloc(strlen(name)+1);
 	strcpy(s, name);
 	fth->words[fth->num_words-1] = (struct forthWord){ s, type, fth->size };
@@ -263,6 +266,9 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addWord(fth, "EXIT", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_EXIT);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "WORDS", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_WORDS);
+	fth_addIns(fth, FTH_RET);
 
 	fth_addWord(fth, "IMMEDIATE", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_IMMEDIATE);
@@ -490,6 +496,29 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_TO);
 	fth_addIns(fth, FTH_FREEBUF);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "ALLOT", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_OLDSIZE);
+	fth_addIns(fth, FTH_ALLOT);
+	fth_addIns(fth, FTH_RESIZE);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "MARKER", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_OLDSIZE);
+	fth_addIns(fth, FTH_GETNEXT);
+	fth_addIns(fth, FTH_CAPITALIZE);
+	fth_addIns(fth, FTH_ADDWORD);
+	fth_addIns(fth, FTH_FREEBUF);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_MARKER);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_RET);
+	fth_addIns(fth, FTH_RESIZE);
+	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "FORGET", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_GETNEXT);
+	fth_addIns(fth, FTH_CAPITALIZE);
+	fth_addIns(fth, FTH_FORGET);
+	fth_addIns(fth, FTH_FREEBUF);
+	fth_addIns(fth, FTH_RET);
 
 	fth_addWord(fth, "TRACEON", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_PUSHB);
@@ -504,11 +533,6 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_PUSH);
 	fth_addVal(fth, &fth->trace);
 	fth_addIns(fth, FTH_SETC);
-	fth_addIns(fth, FTH_RET);
-	fth_addWord(fth, "ALLOT", FTHWORD_NORMAL);
-	fth_addIns(fth, FTH_OLDSIZE);
-	fth_addIns(fth, FTH_ALLOT);
-	fth_addIns(fth, FTH_RESIZE);
 	fth_addIns(fth, FTH_RET);
 
 	fth->old_size = fth->size;
@@ -665,7 +689,10 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 	case FTH_RESIZE: printf("resize"); break;
 	case FTH_OLDSIZE: printf("oldsize"); break;
 	case FTH_TO: printf("to"); break;
-	case FTH_FUNCTION: printf("function");
+	case FTH_FUNCTION: printf("function"); break;
+	case FTH_MARKER: printf("marker"); break;
+	case FTH_WORDS: printf("words"); break;
+	case FTH_FORGET: printf("forget"); break;
 	}
 
 	if(!detail)
@@ -713,8 +740,7 @@ void fth_printWord(Forth *fth, struct forthWord *wd) {
 
 void fth_run(Forth *fth) {
 	void *v1;
-	size_t i;
-	char c;
+	size_t i, j;
 	struct forthWord *wd;
 	void (*fun)(Forth*);
 
@@ -913,12 +939,7 @@ void fth_run(Forth *fth) {
 			fth->stack[fth->sp++] = (void*)(intptr_t)fth_chget();
 			break;
 		case FTH_ACCEPT:
-			for(i = 0; i < (size_t)fth->stack[fth->sp-1]; i++) {
-				c = fth_chget();
-				if(c == '\n' || c == 0)
-					break;
-				((char*)(fth->stack[fth->sp-2]))[i] = c;
-			}
+			i = fth_readln((char*)fth->stack[fth->sp-2], (size_t)fth->stack[fth->sp-1]);
 			fth->sp -= 2;
 			fth->stack[fth->sp++] = (void*)i;
 			break;
@@ -973,7 +994,9 @@ void fth_run(Forth *fth) {
 			fth_addWord(fth, fth->buf, FTHWORD_NORMAL);
 			break;
 		case FTH_ALLOT:
-			fth_dictSize(fth, fth->size+(size_t)(fth->stack[--(fth->sp)]));
+			for(i = 0; i < (size_t)fth->stack[fth->sp-1]; i++)
+				fth_addIns(fth, 0);
+			fth->sp--;
 			break;
 		case FTH_OLDSIZE:
 			fth->size = fth->old_size;
@@ -996,6 +1019,35 @@ void fth_run(Forth *fth) {
 		case FTH_FUNCTION:
 			memcpy(&fun, fth->dict+fth->pc+1, sizeof(void*));
 			fun(fth);
+			break;
+		case FTH_MARKER:
+			fth->size = fth->pc;
+			fth->old_size = fth->size;
+			for(i = 0; i < fth->num_words && fth->words[i].addr < fth->size; i++);
+			for(j = i; j < fth->num_words; j++)
+				free(fth->words[j].name);
+			fth->num_words = i;
+			fth->rsp = 0;
+			return;
+		case FTH_WORDS:
+			for(i = 0; i < fth->num_words; i++) {
+				printf("%s\t", fth->words[i].name);
+				if((i+1)%4 == 0)
+					printf("\n");
+			}
+			if((i+1)%4)
+				printf("\n");
+			break;
+		case FTH_FORGET:
+			wd = fth_findWord(fth, fth->buf);
+			if(wd) {
+				free(wd->name);
+				fth->num_words--;
+				for(i = wd-fth->words; i < fth->num_words; i++)
+					fth->words[i] = fth->words[i+1];
+			}
+			else
+				printf("%s ?\n", wd->name);
 			break;
 		}
 

@@ -90,6 +90,9 @@ enum {
 	FTH_OLDSIZE,
 	FTH_TO,
 	FTH_FUNCTION,
+	FTH_MARKER,
+	FTH_WORDS,
+	FTH_FORGET,
 };
 
 struct forthWord {
@@ -100,7 +103,7 @@ struct forthWord {
 
 typedef struct forth {
 	struct forthWord *words;
-	int num_words;
+	size_t num_words, max_words;
 
 	char *dict;
 	size_t size, old_size, max_size;
@@ -131,6 +134,7 @@ void fth_runFile(Forth *fth, const char *filename);
 
 char fth_chget();
 void fth_chput(char c);
+size_t fth_readln(char *s, size_t len);
 
 void fth_addWord(Forth *fth, const char *name, char type);
 struct forthWord *fth_findWord(Forth *fth, const char *name);
