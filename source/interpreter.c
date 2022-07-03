@@ -16,7 +16,7 @@ int main(int argc, char **args) {
 		return 0;
 	}
 
-	printf("sforth - forth interpreter - tdwsl 2022\n");
+	printf("sforth3 - forth interpreter - tdwsl 2022\n");
 	printf("type 'bye' to quit\n");
 
 	int max = 80;
