@@ -19,6 +19,7 @@ Forth *newForth() {
 	fth->quit = 0;
 	fth->trace = 0;
 	fth->base = (void*)10;
+	fth->emit = fth_chput;
 
 	fth_addDefaultWords(fth);
 

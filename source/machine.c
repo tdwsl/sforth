@@ -563,12 +563,12 @@ void fth_nextInstruction(Forth *fth, size_t *pc) {
 
 void fth_printNum(Forth *fth, intptr_t n) {
 	if(!n) {
-		fth_chput('0');
+		fth->emit('0');
 		return;
 	}
 
 	if(n < 0) {
-		fth_chput('-');
+		fth->emit('-');
 		n *= -1;
 	}
 
@@ -585,9 +585,9 @@ void fth_printNum(Forth *fth, intptr_t n) {
 		}
 		if(ng || d) {
 			if(d < 10)
-				fth_chput(d+'0');
+				fth->emit(d+'0');
 			else
-				fth_chput(d-10+'A');
+				fth->emit(d-10+'A');
 			ng = 1;
 		}
 
@@ -921,16 +921,16 @@ void fth_run(Forth *fth) {
 			fth->stack[fth->sp-1] = (void*)(~((intptr_t)fth->stack[fth->sp-1]));
 			break;
 		case FTH_EMIT:
-			fth_chput((char)(intptr_t)(fth->stack[--(fth->sp)]));
+			fth->emit((char)(intptr_t)(fth->stack[--(fth->sp)]));
 			break;
 		case FTH_TYPE:
 			for(i = 0; i < (size_t)fth->stack[fth->sp-1]; i++)
-				fth_chput(((char*)(fth->stack[fth->sp-2]))[i]);
+				fth->emit(((char*)(fth->stack[fth->sp-2]))[i]);
 			fth->sp -= 2;
 			break;
 		case FTH_PRINTNUM:
 			fth_printNum(fth, (intptr_t)(fth->stack[--(fth->sp)]));
-			fth_chput(' ');
+			fth->emit(' ');
 			break;
 		case FTH_IMMEDIATE:
 			fth->words[fth->num_words-1].type = FTHWORD_IMMEDIATE;
@@ -970,7 +970,7 @@ void fth_run(Forth *fth) {
 			break;
 		case FTH_PRINTBUF:
 			for(i = 0; fth->buf[i]; i++)
-				fth_chput(fth->buf[i]);
+				fth->emit(fth->buf[i]);
 			break;
 		case FTH_ADDSTR:
 			fth_addIns(fth, strlen(fth->buf));

@@ -119,6 +119,8 @@ typedef struct forth {
 
 	char *buf;
 
+	void (*emit)(char);
+
 	void *base;
 	char mode, old_mode;
 	char quit;
