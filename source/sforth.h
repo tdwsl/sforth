@@ -119,7 +119,10 @@ typedef struct forth {
 
 	char *buf;
 
+	/* these apply to ACCEPT, KEY, EMIT, . and TYPE */
 	void (*emit)(char);
+	size_t (*accept)(char*,size_t);
+	char (*key)();
 
 	void *base;
 	char mode, old_mode;

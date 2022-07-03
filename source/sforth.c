@@ -20,6 +20,8 @@ Forth *newForth() {
 	fth->trace = 0;
 	fth->base = (void*)10;
 	fth->emit = fth_chput;
+	fth->key = fth_chget;
+	fth->accept = fth_readln;
 
 	fth_addDefaultWords(fth);
 

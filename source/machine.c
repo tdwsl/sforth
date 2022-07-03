@@ -936,10 +936,10 @@ void fth_run(Forth *fth) {
 			fth->words[fth->num_words-1].type = FTHWORD_IMMEDIATE;
 			break;
 		case FTH_KEY:
-			fth->stack[fth->sp++] = (void*)(intptr_t)fth_chget();
+			fth->stack[fth->sp++] = (void*)(intptr_t)fth->key();
 			break;
 		case FTH_ACCEPT:
-			i = fth_readln((char*)fth->stack[fth->sp-2], (size_t)fth->stack[fth->sp-1]);
+			i = fth->accept((char*)fth->stack[fth->sp-2], (size_t)fth->stack[fth->sp-1]);
 			fth->sp -= 2;
 			fth->stack[fth->sp++] = (void*)i;
 			break;
