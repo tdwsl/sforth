@@ -65,6 +65,9 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addWord(fth, "MOD", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_MOD);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "ABS", FTHWORD_INSERT);
+	fth_addIns(fth, FTH_ABS);
+	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "DUP", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_DUP);
 	fth_addIns(fth, FTH_RET);
@@ -631,6 +634,7 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 	case FTH_MUL: printf("mul"); break;
 	case FTH_DIV: printf("div"); break;
 	case FTH_MOD: printf("mod"); break;
+	case FTH_ABS: printf("abs"); break;
 	case FTH_EQUAL: printf("equal"); break;
 	case FTH_NEQUAL: printf("nequal"); break;
 	case FTH_GREATER: printf("greater"); break;
@@ -854,6 +858,10 @@ void fth_run(Forth *fth) {
 		case FTH_MOD:
 			fth->stack[fth->sp-2] = (void*)((intptr_t)fth->stack[fth->sp-2] % (intptr_t)fth->stack[fth->sp-1]);
 			fth->sp--;
+			break;
+		case FTH_ABS:
+			if((intptr_t)fth->stack[fth->sp-1] < 0)
+				fth->stack[fth->sp-1] = (void*)((intptr_t)fth->stack[fth->sp-1]*-1);
 			break;
 		case FTH_EQUAL:
 			fth->stack[fth->sp-2] = (void*)(intptr_t)((intptr_t)fth->stack[fth->sp-2] == (intptr_t)fth->stack[fth->sp-1]);
