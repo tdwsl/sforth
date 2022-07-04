@@ -20,5 +20,6 @@ size_t fth_readln(char *s, size_t len) {
 	}
 	if(i >= len)
 		while(fgetc(stdin) != '\n');
+	i--;
 	return i;
 }
