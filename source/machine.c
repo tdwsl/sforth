@@ -519,6 +519,14 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_FORGET);
 	fth_addIns(fth, FTH_FREEBUF);
 	fth_addIns(fth, FTH_RET);
+	fth_addWord(fth, "RECURSE", FTHWORD_IMMEDIATE);
+	fth_addIns(fth, FTH_PUSH);
+	fth_addVal(fth, &fth->old_size);
+	fth_addIns(fth, FTH_GET);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_JUMP);
+	fth_addIns(fth, FTH_ADDVAL);
+	fth_addIns(fth, FTH_RET);
 
 	fth_addWord(fth, "TRACEON", FTHWORD_INSERT);
 	fth_addIns(fth, FTH_PUSHB);
