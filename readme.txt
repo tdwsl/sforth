@@ -14,4 +14,6 @@ void fth_runFile(Forth *fth, const char *filename)
 For the most part, these are pretty self explanitory. Examples have been
 included in the 'examples' folder.
 
+Note: 'I' doesn't work poperly at the moment.
+
 This software uses the MIT license. Check out 'license.txt' for more info.
