@@ -334,9 +334,7 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, 0);
 	fth_addIns(fth, FTH_ADDVAL);
 	fth_addIns(fth, FTH_ADDINS);
-		fth_addIns(fth, FTH_INC);
-	fth_addIns(fth, FTH_ADDINS);
-		fth_addIns(fth, FTH_GREATER);
+		fth_addIns(fth, FTH_EQUAL);
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_JZ);
 	fth_addIns(fth, FTH_ADDRETVAL);
@@ -360,7 +358,9 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, 0);
 	fth_addIns(fth, FTH_ADDVAL);
 	fth_addIns(fth, FTH_ADDINS);
-		fth_addIns(fth, FTH_EQUAL);
+		fth_addIns(fth, FTH_DEC);
+	fth_addIns(fth, FTH_ADDINS);
+		fth_addIns(fth, FTH_GREATER);
 	fth_addIns(fth, FTH_ADDINS);
 		fth_addIns(fth, FTH_JZ);
 	fth_addIns(fth, FTH_ADDRETVAL);
