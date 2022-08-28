@@ -481,7 +481,6 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_RESIZE);
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "TO", FTHWORD_IMMEDIATE);
-	fth_addIns(fth, FTH_OLDSIZE);
 	fth_addIns(fth, FTH_GETNEXT);
 	fth_addIns(fth, FTH_CAPITALIZE);
 	fth_addIns(fth, FTH_TO);
