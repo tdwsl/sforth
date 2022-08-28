@@ -428,8 +428,6 @@ void fth_addDefaultWords(Forth *fth) {
 	fth_addIns(fth, FTH_RET);
 	fth_addWord(fth, "S\"", FTHWORD_IMMEDIATE);
 	fth_addIns(fth, FTH_GETNEXT);
-	fth_addIns(fth, FTH_ADDINS);
-		fth_addIns(fth, FTH_PUSHSTR);
 	fth_addIns(fth, FTH_ADDSTR);
 	fth_addIns(fth, FTH_FREEBUF);
 	fth_addIns(fth, FTH_RET);
@@ -592,7 +590,7 @@ void fth_nextInstruction(Forth *fth, size_t *pc) {
 	case FTH_FUNCTION:
 		(*pc) += sizeof(void*) + 1;
 		break;
-	case FTH_PUSHSTR:
+	case FTH_SKIPB:
 		(*pc) += fth->dict[(*pc)+1] + 2;
 		break;
 	}
@@ -653,15 +651,12 @@ void fth_printRStack(Forth *fth) {
 }
 
 void fth_printInstruction(Forth *fth, size_t pc, char detail) {
-	size_t i;
-
 	if(detail)
 		printf("%lu\t", pc);
 
 	switch(fth->dict[pc]) {
 	case FTH_PUSH: printf("push"); break;
 	case FTH_PUSHB: printf("pushb"); break;
-	case FTH_PUSHSTR: printf("pushstr"); break;
 	case FTH_PUSHPTR: printf("pushptr"); break;
 	case FTH_PUSHPTR2: printf("pushptr2"); break;
 	case FTH_CALL: printf("call"); break;
@@ -677,6 +672,7 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 	case FTH_RSET: printf("rset"); break;
 	case FTH_JUMP: printf("jump"); break;
 	case FTH_JZ: printf("jz"); break;
+	case FTH_SKIPB: printf("skip"); break;
 	case FTH_ADDINS: printf("addins"); break;
 	case FTH_ADDVAL: printf("addval"); break;
 	case FTH_ADDRETVAL: printf("addretval"); break;
@@ -736,10 +732,8 @@ void fth_printInstruction(Forth *fth, size_t pc, char detail) {
 		return;
 
 	switch(fth->dict[pc]) {
-	case FTH_PUSHSTR:
-		printf(" ");
-		for(i = 0; i < fth->dict[pc+1]; i++)
-			printf("%c", fth->dict[pc+2+i]);
+	case FTH_SKIPB:
+		printf(" %d", fth->dict[pc+1]);
 		break;
 	case FTH_ADDINS:
 		printf(" ");
@@ -792,10 +786,6 @@ void fth_run(Forth *fth) {
 			fth->stack[fth->sp++] = *(void**)(fth->dict+fth->pc+1);
 			break;
 		case FTH_PUSHB:
-			fth->stack[fth->sp++] = (void*)(intptr_t)fth->dict[fth->pc+1];
-			break;
-		case FTH_PUSHSTR:
-			fth->stack[fth->sp++] = (void*)(fth->dict+fth->pc+2);
 			fth->stack[fth->sp++] = (void*)(intptr_t)fth->dict[fth->pc+1];
 			break;
 		case FTH_PUSHPTR:
@@ -855,6 +845,8 @@ void fth_run(Forth *fth) {
 				fth->pc = (size_t)(*(void**)(fth->dict+fth->pc+1));
 				continue;
 			}
+			break;
+		case FTH_SKIPB:
 			break;
 		case FTH_ADDINS:
 			fth_addIns(fth, fth->dict[fth->pc+1]);
@@ -1011,9 +1003,19 @@ void fth_run(Forth *fth) {
 				fth->emit(fth->buf[i]);
 			break;
 		case FTH_ADDSTR:
-			fth_addIns(fth, strlen(fth->buf));
-			for(i = 0; i < fth->buf[i]; i++)
+			if(fth->old_mode != FTHMODE_RUN) {
+				fth_addIns(fth, FTH_SKIPB);
+				fth_addIns(fth, strlen(fth->buf));
+			}
+			v1 = fth->dict+fth->size;
+			for(i = 0; fth->buf[i]; i++)
 				fth_addIns(fth, fth->buf[i]);
+			if(fth->old_mode == FTHMODE_RUN)
+				fth->old_size = fth->size;
+			fth_addIns(fth, FTH_PUSH);
+			fth_addVal(fth, v1);
+			fth_addIns(fth, FTH_PUSHB);
+			fth_addIns(fth, strlen(fth->buf));
 			break;
 		case FTH_ADDCH:
 			fth_addIns(fth, fth->buf[0]);
