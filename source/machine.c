@@ -785,7 +785,7 @@ void fth_run(Forth *fth) {
 			fth->quit = 1;
 			return;
 		case FTH_HERE:
-			fth->stack[fth->sp++] = (void*)(fth->dict+fth->size);
+			fth->stack[fth->sp++] = (void*)(fth->dict+fth->old_size);
 			break;
 		case FTH_DSIZE:
 			fth->stack[fth->sp++] = (void*)(fth->size);
